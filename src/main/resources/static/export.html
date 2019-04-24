@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Testing Management Console</title>
+<link rel="stylesheet" href="/css/bootstrap.min.css">
+<link rel="stylesheet" href="/css/bootstrap-theme.min.css">
+</head>
+<body>
+	<div id="question-container">
+	</div>
+	
+	<script	src="/js/jquery-1.11.3.min.js"></script>
+	<script	src="/js/bootstrap.min.js"></script>
+	<script type="text/javascript">
+		var token = 'aaa';
+		var AUTH_TOKEN_NAME = 'X-Testing-Web-Token';
+		var headers = {};
+		headers[AUTH_TOKEN_NAME] = token;
+
+		$(document).ready(
+			function() {
+												
+				$.ajax({
+						method : 'GET',
+						url : '/api/v1/manage/quest',
+						headers : headers,
+						data : {},
+						success : function(data) {
+									var text = 'Data Loading script<br>';
+
+									for (var i = 0; i < data.length; i++) {
+										if (data[i].theme.id != 138 && data[i].theme.id != 139 && 
+												data[i].theme.id != 140 && data[i].theme.id != 141) {
+											text += 'INSERT INTO public.questions ';
+											text += '(question_id,question_title,question_text,question_type, question_mark,theme_id) ';
+											text += 'VALUES ('+data[i].id+',\''+data[i].title+'\',\''+data[i].text+
+													'\', '+data[i].type+', '+data[i].mark+','+data[i].theme.id+
+													');<br>';
+											var answers = data[i].answers;
+											for (var j=0; j<answers.length; j++) {
+												text += 'INSERT INTO public.answer_cases ';
+												text += '(case_id, case_text, case_correct, question_id) ';
+												text += 'VALUES (';
+												text += answers[j].id+',\''+answers[j].text+'\','
+														+answers[j].correct+','+data[i].id;
+												text += '); <br>';
+												//text += (answers[j].correct>0?'+':'-')+answers[j].text+'<br>';
+											};
+											text += '<br>';
+										};
+									};
+									$('#question-container').append(text);
+							}});
+						});
+	</script>
+</body>
+</html>

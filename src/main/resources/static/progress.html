@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Testing progress</title>
+<link rel="stylesheet"	href="/css/bootstrap.min.css">
+<link rel="stylesheet"	href="/css/bootstrap-theme.min.css">
+</head>
+<body>
+	<a href="#" class="btn" id="stop">Стоп</a>
+	<select id="group"></select>
+	<div class="container-fluid">
+		<div class="row">
+			<div id="progress-container">
+				<table id="progress-table" class="table">
+					<tr>
+						<th>Ім'я</th>
+						<th>Прогрес</th>
+						<th>Бали практичних</th>
+						<th>Бали іспиту</th>
+						<th>Оцінка</th>
+					</tr>
+				</table>
+			</div>
+		</div>
+	</div>
+	
+	<!-- Result dialog -->
+	<div class="modal fade" id="detailsDialog" tabindex="-1" role="dialog"
+		aria-labelledby="resultUserLabel" aria-hidden="true">
+		<div class="modal-dialog modal-lg">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal"
+						aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+					<h4 class="modal-title" id="resultUserLabel">Результат студента</h4>
+				</div>
+				<div class="modal-body">
+					<span id="detail-username"></span><br>
+					№ залікової: <span id="detail-ticketid"></span><br>
+					Бал практичних: <span id="detail-practice"></span><br>
+					Бал іспиту: <span id="detail-mark"></span><br>
+					<label>Всього:</label> <span id="detail-total"></span><br> 
+					<label>QUERY1:</label> <span id="detail-select"></span><br>
+					<label>QUERY2:</label> <span id="detail-update"></span><br>
+					<label>QUERY3:</label> <span id="detail-insert"></span><br>
+					<label>QUERY4:</label> <span id="detail-delete"></span><br>
+					<table id="wrong-answers" style="width: 100%;"></table>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Закрити</button>
+				</div>
+			</div>
+		</div>
+	</div>	
+	
+
+	<script	src="/js/jquery-1.11.3.min.js"></script>
+	<script	src="/js/bootstrap.min.js"></script>
+	<script type="text/javascript">
+		var timer;
+		var currentData = {};
+		var marks = [];
+		marks[0] = {min: 0, max: 50, marki: 'F', marku: 'незадов'};
+		marks[1] = {min: 51, max: 60, marki: 'E', marku: 'задов'};
+		marks[2] = {min: 61, max: 70, marki: 'D', marku: 'задов'};
+		marks[3] = {min: 71, max: 80, marki: 'C', marku: 'добре'};
+		marks[4] = {min: 81, max: 89, marki: 'B', marku: 'добре'};
+		marks[5] = {min: 90, max: 100, marki: 'A', marku: 'відмінно'};
+		
+		function getRealMark(mark) {
+			for (var i=0; i<marks.length; i++) {
+				if (mark >= marks[i].min && mark <= marks[i].max) {
+					return marks[i].marki + '('+marks[i].marku+')';
+				}
+			}
+		}
+		
+		$(document).ready(function(){
+			$.ajax({
+				method : 'GET',
+				url : '/api/v1/manage/groups',
+				data : {},
+				success : function(data) {
+					for (var i=0; i<data.length; i++) {
+						$('#group').append('<option value="'+data[i].name+'">'+data[i].name+'</option>')
+					}
+				}
+			});
+			$('#stop').click(stopTimer);
+			setTimer();
+		});
+		
+		function setTimer() {
+			timer = setTimeout(updateTable, 5000);
+		}
+		
+		function stopTimer() {
+			if (timer) {
+				clearTimeout(timer);
+			}
+		}
+		
+		function showDetails(element) {
+			$("#detail-username").empty();
+			$("#detail-ticketid").empty();
+			$("#detail-practice").empty();
+			$("#detail-test").empty();
+			$("#detail-total").empty();
+			$("#detail-mark").empty();
+			$("#detail-select").empty();
+			$("#detail-update").empty();
+			$("#detail-insert").empty();
+			$("#detail-delete").empty();
+			$('#wrong-answers').empty();
+			$('#wrong-answers').append('<tr><th>Бали</th><th>Питання</th><th>Схема</th></tr>')
+			
+			var ticketId = $(element.currentTarget).attr('data-progress-row');
+			var details = currentData[ticketId];
+			if (details) {
+				$("#detail-username").append(details.username);
+				$("#detail-ticketid").append(details.ticketId);
+				$("#detail-practice").append(details.practicMark);
+				$("#detail-mark").append(details.examMark);
+				$("#detail-total").append(details.totalMark);
+				$("#detail-select").append(details.selectQuery);
+				$("#detail-update").append(details.updateQuery);
+				$("#detail-insert").append(details.insertQuery);
+				$("#detail-delete").append(details.deleteQuery);
+				for (var i=0; i<details.wrongAnswers.length; i++) {
+					if (details.wrongAnswers[i].query === undefined) {
+						$('#wrong-answers').append('<tr><td>'+details.wrongAnswers[i].markObtained+'</td><td>'+details.wrongAnswers[i].questionText+'</td><td></td></tr>')
+					} else {
+						$('#wrong-answers').append('<tr><td>'+details.wrongAnswers[i].markObtained+'</td><td>'+details.wrongAnswers[i].questionTitle+'</td><td>'+details.wrongAnswers[i].schema+'</td></tr>')
+					}
+				}
+			} else {
+				$("#detail-username").append('NO DATA!!!');
+			}
+			$('#detailsDialog').modal('show');
+		}
+		
+		function updateTable() {
+			if (timer) {
+				clearTimeout(timer);
+			}
+			$.ajax({
+				method : 'GET',
+				url : '/api/v1/manage/progress',
+				data : {},
+				success : function(data) {
+					var groupName = $('#group').val();
+					currentData = {};
+					$('tr[data-progress-row]').unbind('click');
+					$('tr[data-progress-row]').remove();
+					data.sort(function(a,b){return b.totalMark - a.totalMark;});
+					for(var i=0; i<data.length; i++) {
+						if (groupName != '' && groupName == data[i].groupname) {
+					$('#progress-table').append('<tr title="'+
+							'№     : '+data[i].ticketId+'\n'+
+							'ПІБ   : '+data[i].username +'\n'+
+							'Практ : '+data[i].practicMark+'\n'+							
+							'Тест  : '+data[i].examMark+'\n'+
+							'Всього: '+data[i].totalMark+'\n'+
+							'Зап.1 : '+data[i].selectQuery+'\n'+
+							'Зап.2 : '+data[i].insertQuery+'\n'+
+							'Зап.3 : '+data[i].updateQuery+'\n'+
+							'Зап.4 : '+data[i].deleteQuery+'\n'+
+							'" data-progress-row="'+
+							data[i].ticketId+'"><td>'+data[i].username
+							+'</td><td>'+'<div style="background-color: blue; width: '+(data[i].percent> 100?100:data[i].percent)+'%;height: 1em;"></div>'
+							+'</td><td>'+data[i].practicMark
+							+'</td><td>'+data[i].examMark
+							+'</td><td>'+getRealMark(data[i].totalMark)
+							+'</td></tr>');
+						currentData[data[i].ticketId] = data[i];
+						}
+					}
+					$('tr[data-progress-row]').bind('click', showDetails);
+					setTimer();
+				},
+				statusCode : {
+					404 : function() {
+						alert("Нема такого користувача");
+					}
+				}
+			});
+		}
+	
+	</script>
+</body>
+</html>

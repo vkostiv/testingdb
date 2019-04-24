@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Testing Management Console</title>
+<link rel="stylesheet" href="/css/bootstrap.min.css">
+<link rel="stylesheet" href="/css/bootstrap-theme.min.css">
+</head>
+<body>
+	<ul>
+		<li id="theme" style="cursor: pointer;">Теми</li>
+		<li id="question" style="cursor: pointer;">Питання</li>
+		<li id="answer" style="cursor: pointer;">Відповіді</li>
+		<li id="user" style="cursor: pointer;">Користувачі</li>
+	</ul>
+	<div id="theme-container">
+		<table id="theme-table" class="table">
+			<tr>
+				<th>ID</th>
+				<th>Назва</th>
+				<th><a href="#" id="add-theme" data-toggle="modal" data-target="#new-theme">Нова</a></th>
+				<th>&nbsp;</th>
+			</tr>
+		</table>
+	</div>
+	<!-- New theme dialog -->
+	<div class="modal fade" id="new-theme" tabindex="-1" role="dialog"
+		aria-labelledby="newThemeLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal"
+						aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+					<h4 class="modal-title" id="newThemeLabel">Нова Тема</h4>
+				</div>
+				<div class="modal-body">
+					<input type="text" id="theme-name" placeholder="Назва теми" style="width: 80%; margin-top: 0.5em;"> 
+					<input type="text" id="theme-description" placeholder="Опис теми" style="width: 80%; margin-top: 0.5em;">
+				</div>
+				<div id="question-container">
+					<table id="question-table" class="table">
+						<tr>
+							<th>ID</th>
+							<th>Тема</th>
+							<th>Назва</th>
+							<th><a href="#" id="add-quest" data-toggle="modal"
+								data-target="#new-question">Нове</a></th>
+						</tr>
+					</table>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Закрити</button>
+					<button type="button" class="btn btn-primary" id="save-theme">Зберегти</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	
+	
+<!-- New question dialog -->
+	<div class="modal fade" id="new-question" tabindex="-1" role="dialog"
+		aria-labelledby="newQuestionLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal"
+						aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+					<h4 class="modal-title" id="newQuestionLabel">Нове питання</h4>
+				</div>
+				<div class="modal-body">
+					<select id="question-theme" style="width: 80%; margin-top: 0.5em;"></select>
+					<input type="text" id="question-title" placeholder="Назва питання" style="width: 80%; margin-top: 0.5em;">
+					<textarea id="question-text" placeholder="Текст питання" style="width: 80%; margin-top: 0.5em;"></textarea>
+					<input type="text" id="question-mark" placeholder="Максимальний бал" style="width: 80%; margin-top: 0.5em;">
+					<input type="text" id="question-schema" placeholder="Схема бази даних" style="width: 80%; margin-top: 0.5em;">
+					<select id="question-type" style="width: 80%; margin-top: 0.5em;">
+						<option value="0">Одна правильна відповідь</option>
+						<option value="1">Кілька правильних відповідей</option>
+						<option value="2">Відповідь текстом</option>
+						<option value="3">Відповідь SELECT</option>
+						<option value="4">Відповідь INSERT/UPDATE/DELETE</option>
+					</select>
+					<textarea id="question-query" placeholder="Запит для перевірки" style="width: 80%; margin-top: 0.5em;"></textarea>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Закрити</button>
+					<button type="button" class="btn btn-primary" id="save-question">Зберегти</button>
+				</div>
+			</div>
+		</div>
+	</div>	
+	
+	<div id="answer-container">
+		<table id="answer-table" class="table">
+			<tr>
+				<th>ID</th>
+				<th>Текст</th>
+				<th>Оцінка</th>
+				<th><a href="#" id="add-answer" data-toggle="modal" data-target="#new-answer">Нова</a></th>
+			</tr>
+		</table>
+	</div>
+	
+<!-- New answer dialog -->
+	<div class="modal fade" id="new-answer" tabindex="-1" role="dialog"
+		aria-labelledby="newAnswerLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal"
+						aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+					<h4 class="modal-title" id="newAnswerLabel">Нова відповідь</h4>
+				</div>
+				<div class="modal-body">
+					<select id="answer-question" style="width: 80%; margin-top: 0.5em;"></select>
+					<textarea id="answer-text" placeholder="Текст відповіді" style="width: 80%; margin-top: 0.5em;"></textarea>
+					<input type="text" id="answer-mark" placeholder="Бал відповіді" style="width: 80%; margin-top: 0.5em;">
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Закрити</button>
+					<button type="button" class="btn btn-primary" id="save-answer">Зберегти</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<div id="user-container">
+		<table id="user-table" class="table">
+			<tr>
+				<th>ID</th>
+				<th>№ квитка</th>
+				<th>Ім'я</th>
+				<th><a href="#" id="add-user" data-toggle="modal" data-target="#new-user">Новий</a></th>
+			</tr>
+		</table>
+	</div>
+	
+<!-- New user dialog -->
+	<div class="modal fade" id="new-user" tabindex="-1" role="dialog"
+		aria-labelledby="newUserLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal"
+						aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+					<h4 class="modal-title" id="newUserLabel">Новий Користувач</h4>
+				</div>
+				<div class="modal-body">
+					<input type="text" id="user-name" placeholder="Ім'я користувача" style="width: 80%; margin-top: 0.5em;"> 
+					<input type="text" id="user-password" placeholder="Пароль" style="width: 80%; margin-top: 0.5em;">
+					<input type="text" id="user-ticketid" placeholder="№ студентського" style="width: 80%; margin-top: 0.5em;">
+					<input type="text" id="user-mark" placeholder="Оцінка практичних" style="width: 80%; margin-top: 0.5em;">
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Закрити</button>
+					<button type="button" class="btn btn-primary" id="save-user">Зберегти</button>
+				</div>
+			</div>
+		</div>
+	</div>	
+	
+	<script	src="/js/jquery-1.11.3.min.js"></script>
+	<script	src="/js/bootstrap.min.js"></script>
+	<script type="text/javascript">
+		var token = 'aaa';
+		var AUTH_TOKEN_NAME = 'X-Testing-Web-Token';
+		var headers = {};
+		headers[AUTH_TOKEN_NAME] = token;
+
+		$(document)
+				.ready(
+						function() {
+							$('#theme-container').hide();
+							$('#question-container').hide();
+							$('#user-container').hide();
+							$('#answer-container').hide();
+
+							$('#theme')
+									.click(
+											function(event) {
+												$('#theme-container').show();
+												$('#question-container').hide();
+												$('#user-container').hide();
+												$('#answer-container').hide();
+
+												$.ajax({
+															method : 'GET',
+															url : '/api/v1/manage/theme',
+															headers : headers,
+															data : {},
+															success : function(data) {
+																$('[data-theme-row]').remove();
+																for (var i = 0; i < data.length; i++) {
+																	$('#theme-table')
+																			.append(
+																					'<tr data-theme-row><td>'
+																							+ data[i].id
+																							+ '</td><td>'
+																							+ data[i].name
+																							+ '</td><td><a href="#" id="delete-theme" data-delete-theme-id="'+data[i].id+'">Знищити</a></td>'
+																							+ '<td><a href="#" id="edit-theme" data-edit-theme-id="'+data[i].id+'">Редагувати</a></td>'
+																							+ '</tr>');
+																}
+																// Delete theme
+																$('[data-delete-theme-id]').click(function (event){
+																	// TODO: ask for permission to delete theme
+																	var theme_id = $(event.target).attr('data-delete-theme-id');
+																	$.ajax({method : 'DELETE',
+																			url : '/api/v1/manage/theme?id='+theme_id,
+																			headers : headers,
+																			success : function(data) {
+																				$('#theme').click();
+																			}});
+																});
+																// Edit theme
+																$('[data-edit-theme-id]').click(function (event){
+																	var theme_id = $(event.target).attr('data-edit-theme-id');
+																	// TODO: fill in modal form and then show it
+																});
+															},
+															statusCode : {
+																404 : function() {
+																	alert("page not found");
+																}
+															}
+														});
+											});
+							$('#question').click(
+											function(event) {
+												$('#theme-container').hide();
+												$('#question-container').show();
+												$('#answer-container').hide();
+												$('#user-container').hide();
+
+												$.ajax({
+													method : 'GET',
+													url : '/api/v1/manage/theme',
+													headers : headers,
+													data : {},
+													success : function(data) {
+														$('#question-theme').empty();
+														for (var i = 0; i < data.length; i++) {
+															$('#question-theme').append('<option value="'+ data[i].id + '">'+data[i].name+'</option>');
+														}
+													},
+													statusCode : {
+														404 : function() {
+															alert("page not found");
+														}
+													}
+												});
+												
+												$.ajax({
+															method : 'GET',
+															url : '/api/v1/manage/quest',
+															headers : headers,
+															data : {},
+															success : function(data) {
+																$('[data-quest-row]').remove();
+																for (var i = 0; i < data.length; i++) {
+																	$('#question-table')
+																			.append(
+																					'<tr data-quest-row><td>'
+																							+ data[i].id
+																							+ '</td><td>'
+																							+ data[i].theme.name
+																							+ '</td><td>'
+																							+ data[i].text.substr(0, 50)
+																							+ '</td><td><a href="#" id="delete-quest" data-quest-id="'+data[i].id+'">Знищити</a></td></tr>');
+																}
+															},
+															statusCode : {
+																404 : function() {
+																	alert("page not found");
+																}
+															}
+														});
+											});
+							
+							$('#answer').click(
+									function(event) {
+										$('#theme-container').hide();
+										$('#question-container').hide();
+										$('#answer-container').show();
+										$('#user-container').hide();
+
+										$.ajax({
+											method : 'GET',
+											url : '/api/v1/manage/quest',
+											headers : headers,
+											data : {},
+											success : function(data) {
+												$('#answer-question').empty();
+												for (var i = 0; i < data.length; i++) {
+													$('#answer-question').append('<option value="'+ data[i].id + '">'+data[i].text+'</option>');
+												}
+											},
+											statusCode : {
+												404 : function() {
+													alert("page not found");
+												}
+											}
+										});
+										
+										$.ajax({
+													method : 'GET',
+													url : '/api/v1/manage/answer',
+													headers : headers,
+													data : {},
+													success : function(data) {
+														$('[data-answer-row]').remove();
+														for (var i = 0; i < data.length; i++) {
+															$('#answer-table')
+																	.append(
+																			'<tr data-answer-row><td>'
+																					+ data[i].id
+																					+ '</td><td>'
+																					+ data[i].text
+																					+ '</td><td>'
+																					+ data[i].correct
+																					+ '</td><td><a href="#" data-answer-id="'+data[i].id+'">Знищити</a></td></tr>');
+														}
+													},
+													statusCode : {
+														404 : function() {
+															alert("page not found");
+														}
+													}
+												});
+									});							
+							
+							$('#save-question').click(function(){
+								var question = {};
+								question.title = $('#question-title').val();
+								question.text = $('#question-text').val();
+								question.themeId = $('#question-theme').val();
+								question.type = $('#question-type').val();
+								question.mark = $('#question-mark').val();
+								question.checkQuery = $('#question-query').val();
+								question.schema = $('#question-schema').val();
+								
+								if (question.text) {
+									$.ajax({method : 'POST',
+											url : '/api/v1/manage/quest',
+											headers : headers,
+											data : question,
+											success : function(data) {
+												//$('#quest').click();
+											},
+											statusCode : {
+												404 : function() {
+													alert("page not found");
+												},
+												201 : function() {
+													$('#quest').click();
+												}
+											}
+								});
+								}
+							});
+							$('#user')
+									.click(
+											function(event) {
+												$('#theme-container').hide();
+												$('#question-container').hide();
+												$('#user-container').show();
+												$('#answer-container').hide();
+
+												$
+														.ajax({
+															method : 'GET',
+															url : '/api/v1/manage/user',
+															headers : headers,
+															data : {},
+															success : function(
+																	data) {
+																$('[data-user-row]').remove();
+																for (var i = 0; i < data.length; i++) {
+																	$(
+																			'#user-table')
+																			.append(
+																					'<tr data-user-row><td>'
+																							+ data[i].id
+																							+ '</td><td>'
+																							+ data[i].ticketId
+																							+ '</td><td>'
+																							+ data[i].username
+																							+ '</td><td><a href="#" id="delete-user" data-user-id="'+data[i].id+'">Знищити</a></td></tr>');
+																}
+															},
+															statusCode : {
+																404 : function() {
+																	alert("page not found");
+																}
+															}
+														});
+											});
+							
+							$('#save-theme').click(function(){
+								// TODO: distinguish edit/insert mode here
+								var theme = {};
+								theme.name = $('#theme-name').val();
+								theme.description = $('#theme-description').val();
+								if (theme.name) {
+									$.ajax({method : 'POST',
+											url : '/api/v1/manage/theme',
+											headers : headers,
+											data : theme,
+											success : function(data) {
+												$('#theme').click();
+											},
+											statusCode : {
+												404 : function() {
+													alert("page not found");
+												},
+												201 : function() {
+													$('#theme').click();
+												}
+											}
+								});
+								} else {
+									alert('Не можна додати тему без назви');
+								}
+ 							});
+							
+							$('#save-answer').click(function(){
+								var answer = {};
+								answer.questionId = $('#answer-question').val();
+								answer.text = $('#answer-text').val();
+								answer.correct = $('#answer-mark').val();
+								if (answer.text) {
+									$.ajax({method : 'POST',
+											url : '/api/v1/manage/answer',
+											headers : headers,
+											data : answer,
+											success : function(data) {
+												//$('#theme').click();
+											},
+											statusCode : {
+												404 : function() {
+													alert("page not found");
+												},
+												201 : function() {
+													$('#answer').click();
+												}
+											}
+								});
+								}
+ 							});
+							
+							$('#save-user').click(function(){
+								var user = {};
+								user.name = $('#user-name').val();
+								user.password = $('#user-password').val();
+								user.ticketId = $('#user-ticketid').val();
+								user.mark = $('#user-mark').val();
+								if (user.name) {
+									$.ajax({method : 'POST',
+											url : '/api/v1/manage/user',
+											headers : headers,
+											data : user,
+											success : function(data) {
+												//$('#user').click();
+											},
+											statusCode : {
+												404 : function() {
+													alert("page not found");
+												},
+												201 : function() {
+													$('#user').click();
+												}
+											}
+								});
+								}
+ 							});
+						});
+	</script>
+</body>
+</html>

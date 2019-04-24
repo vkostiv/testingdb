@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Тестування</title>
+<link rel="stylesheet"	href="/css/bootstrap.min.css">
+<link rel="stylesheet"	href="/css/bootstrap-theme.min.css">
+<style type="text/css">
+.quest{
+	border: solid 1px black;
+}
+table.quest tr td{
+ 	border: solid 1px black;
+}
+.quest-head {
+	background-color: gray ;
+	font-weight: bold;
+	color: white;
+}
+</style>
+</head>
+<body>
+
+	<div id="start-screen" style="display: none;" class="container-fluid">
+		<div class="row">
+			<div class="col-md-10 col-md-offset-2">
+				<ul>
+					<li>Кожне питання має лімітований час для розв'язку.</li>
+					<li>Лічильник часу знаходиться у правому верхньому кутку
+						екрану.</li>
+					<li>По вичерпанню часу відбудеться перехід до наступного
+						питання.</li>
+					<li>Якщо Ви відповіли достроково - просто натисніть кнопку
+						"наступне питання".</li>
+					<li>Для початку тестування натисніть кнопку "Почати".</li>
+				</ul>
+				<button type="button" class="btn btn-primary center-block" id="start-button">Почати
+					тестування</button>
+			</div>
+		</div>
+	</div>
+	<div id="testing-screen" style="display: none;" class="container-fluid">
+		<div class="row">
+			<div style="float: left;">
+			Студент <span id="username" style="font-weight: bold;">%username%</span>
+			</div>
+			<div style="float: right;">
+			Залишилося для відповіді на питання <span id="time-left" style="font-weight: bold;">00:00:30</span>
+			</div>
+		</div>
+		<div class="row">
+			<div id="question-title" class="col-md-10 col-md-offset-2"></div>
+		</div>
+		<div class="row">
+			<div id="question-intro" class="col-md-10 col-md-offset-2"></div>
+		</div>
+		<div class="row">
+			<div id="question-text" class="col-md-10 col-md-offset-2"></div>
+		</div>
+		<div class="row">
+			<div id="answer" class="col-md-8 col-md-offset-3"></div>
+		</div>
+		<div class="row">
+			<div id="footer" class="col-md-8 col-md-offset-3">
+				<button type="button" class="btn btn-primary center-block" id="next-button">Наступне питання</button>
+			</div>
+		</div>
+	</div>
+	<div id="end-screen" style="display: none;" class="container-fluid">
+		Результати збережено. Дякую за Ваш час.
+	</div>
+	
+<!-- Login dialog -->
+	<div class="modal fade" id="login-dialog" tabindex="-1" role="dialog"
+		aria-labelledby="newQuestionLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal"
+						aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+					<h4 class="modal-title" id="newQuestionLabel">Вхід в систему</h4>
+				</div>
+				<div class="modal-body">
+					<input type="text" id="login-ticket" placeholder="№ залікової книжки" style="width: 80%; margin-top: 0.5em;">
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-primary" id="login-button">Ввести</button>
+				</div>
+			</div>
+		</div>
+	</div>	
+	
+
+	<script	src="/js/jquery-1.11.3.min.js"></script>
+	<script	src="/js/bootstrap.min.js"></script>
+	<script type="text/javascript">
+		var headers = {};
+		var AUTH_TOKEN_NAME = 'X-Testing-Web-Token';
+		var userName = 'Невідомо хто';
+		var timer;
+		var timeCounter = 240;
+		var timeTaken = 0;
+		var startTime = 0;
+		
+		$(document).ready(onLoadDoc);
+		
+		function onLoadDoc(event) {
+			$('#login-button').click(performLogin);
+			
+			$('#start-button').click(function(){
+				$.ajax({
+					method : 'POST',
+					url : '/api/v1/start',
+					headers : headers,
+					data : {},
+					success : function(data) {
+						$('#start-screen').hide();
+						$('#testing-screen').show();
+						loadNext();
+					},
+					statusCode : {
+						404 : function() {
+							alert("Нема такого користувача");
+						}
+					}
+				});
+			});
+			
+			$('#next-button').click(function(){
+				sendAnswer();
+			});
+				
+			
+			showLogin();
+		}
+		
+		function showLogin() {
+			$('#login-dialog').modal('show');
+		}
+		
+		function performLogin() {
+			var ticketId = $('#login-ticket').val();
+			if (ticketId) {
+				$.ajax({
+					method : 'POST',
+					url : '/api/v1/login',
+					headers : headers,
+					data : {ticketId:ticketId},
+					success : function(data) {
+						headers[AUTH_TOKEN_NAME] = data.token;
+						$('#login-dialog').modal('hide');
+						userName = data.username;
+						$('#start-screen').show();
+						$('#username').text(userName);
+					},
+					statusCode : {
+						404 : function() {
+							alert("Нема такого користувача");
+						}
+					}
+				});
+			}
+		}
+		
+		function sendAnswer() {
+			var answer = {};
+			answer.questionId = $('#question-id').val();
+			answer.timeTaken = timeTaken;
+			var answerType = $('#question-type').val();
+			if (answerType == 0) {
+				var results = $( 'input[name="answer"]:checked' );
+				if (results.length > 0) {
+					answer.answerId = $(results[0]).attr('data-answer-id');	
+				} else {
+					answer.answerId = -1; // not answered
+				}
+			} else if (answerType >= 3) {
+				answer.answerText = $('#answer-code').val();
+			}
+			
+			$.ajax({
+				method : 'POST',
+				url : '/api/v1/answer',
+				headers : headers,
+				data : answer,
+				success : function(data) {
+					clearTimeout(timer);
+					loadNext();
+				},
+				statusCode : {
+					404 : endTest
+				}
+			});
+		}
+		
+		function loadNext(){
+			if (timer) {
+				clearTimeout(timer);
+			}
+			$.ajax({
+				method : 'POST',
+				url : '/api/v1/next',
+				headers : headers,
+				data : {},
+				success : function(data) {
+					$('#question-title').text(data.theme.name+'. '+data.title);
+					$('#question-intro').html(data.intro);
+					$('#question-text').html(data.text);
+						
+					$('#answer').empty();
+					$('#answer').append('<input type="hidden" id="question-id" value="'+data.id+'">');
+					$('#answer').append('<input type="hidden" id="question-type" value="'+data.type+'">');
+					if (data.type === 0) {
+						// cases
+						
+						
+						for (var i=0; i<data.answers.length; i++) {
+							$('#answer').append('<input type="radio" name="answer" id="answer'+data.answers[i].id+'" data-answer-id="'+data.answers[i].id+'">'+data.answers[i].text+'<br>');	
+						}
+					} else  if (data.type >= 3) {
+						// code
+						$('#answer').append('<textarea name="answer" id="answer-code" style="width: 90%;"></textarea>');
+					}
+					if (data.type == 0) {
+						timeCounter = 45;
+					} else {
+						timeCounter = 300;
+					}
+					timeTaken = 0;
+					$.ajax({
+						method: 'GET',
+						url: '/api/v1/time',
+						success: function (time) {
+							startTime = time;
+							timer = setTimeout(updateTime, 1000);
+						}
+					});
+				},
+				statusCode : {
+					404 : endTest
+				}
+			});
+		}
+		
+		function updateTime() {
+			$.ajax({
+				method: 'GET',
+				url: '/api/v1/time',
+				success: function (time) {
+					timeTaken = Math.floor((time - startTime)/1000);
+					//timeCounter = Math.floor((time - startTime)/1000);
+					var s = (timeCounter-timeTaken) % 60;
+					var m = Math.floor((timeCounter-timeTaken)/60);
+					$('#time-left').text('0:'+pad(m)+':'+pad(s));
+					if ((timeCounter - timeTaken) <= 0) {
+						$('#next-button').click();
+						timeCounter = 300;
+					} else {
+						timer = setTimeout(updateTime, 1000);
+					}
+				}
+			});
+		}
+		
+		function pad(number) {
+			var length = 2;
+		    number = String(number);
+		    var zeros = [];
+		    for(var i=0; i<length; ++i) {
+		        zeros.push('0');
+		    }
+		    return zeros.join('').substring(0, length - number.length) + number;
+		}
+		
+		function endTest() {
+			$('#start-screen').hide();
+			$('#testing-screen').hide();
+			$('#end-screen').show();
+		}
+	</script>
+</body>
+</html>

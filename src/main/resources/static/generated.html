@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Testing Management Console</title>
+<link rel="stylesheet" href="/css/bootstrap.min.css">
+<link rel="stylesheet" href="/css/bootstrap-theme.min.css">
+<style type="text/css">
+.quest{
+	border: solid 1px black;
+}
+table.quest tr td{
+ 	border: solid 1px black;
+}
+.quest-head {
+	background-color: gray ;
+	font-weight: bold;
+	color: white;
+}
+</style>
+
+</head>
+<body>
+	<div id="question-container">
+	</div>
+	
+	<script	src="/js/jquery-1.11.3.min.js"></script>
+	<script	src="/js/bootstrap.min.js"></script>
+	<script type="text/javascript">
+		var token = 'aaa';
+		var AUTH_TOKEN_NAME = 'X-Testing-Web-Token';
+		var headers = {};
+		headers[AUTH_TOKEN_NAME] = token;
+
+		$(document).ready(
+			function() {
+												
+				$.ajax({
+						method : 'GET',
+						url : '/api/v1/manage/generate/25',
+						headers : headers,
+						data : {},
+						success : function(data) {
+									for (var i = 0; i < data.length; i++) {
+										
+										var survey = data[i];
+										var text = '<b>Варіант '+(i+1)+ '</b><br>';
+										for (var j=0;j<survey.questions.length; j++) {
+											if (survey.questions[j].theme.code == 'INSERT'
+													|| survey.questions[j].theme.code == 'UPDATE'
+													|| survey.questions[j].theme.code == 'DELETE') {
+												
+												continue;
+											}
+											//text += '<i>'+survey.questions[j].title+'</i><br>';
+											text += survey.questions[j].text;
+											if (survey.questions[j].type < 3) {
+												text += '<p>';
+												for (var k=0; k<survey.questions[j].answers.length; k++) {
+													text += '&squ;  '+survey.questions[j].answers[k].text+'<br>';
+												}
+												text += '</p>';
+											}
+										}
+										$('#question-container').append(text);
+									};
+									
+							}});
+						});
+	</script>
+</body>
+</html>
